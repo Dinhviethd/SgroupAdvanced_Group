@@ -1,22 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getWorkspaceById, type Workspace } from '@/service/workspaceService'
+import { getBoardsByWorkspace, type Board } from '@/service/boardService'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CreateBoard } from './CreateBoard'
+import { Globe, Lock, Users } from 'lucide-react'
 
 export function WorkspaceDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const fetchBoards = useCallback(async () => {
+    if (!id) return
+    try {
+      const boardsData = await getBoardsByWorkspace(parseInt(id))
+      setBoards(boardsData)
+    } catch (err) {
+      console.error('Error fetching boards:', err)
+    }
+  }, [id])
+
   useEffect(() => {
-    const fetchWorkspace = async () => {
+    const fetchData = async () => {
       if (!id) return
-      
+
       try {
-        const data = await getWorkspaceById(parseInt(id))
-        setWorkspace(data)
+        const [workspaceData, boardsData] = await Promise.all([
+          getWorkspaceById(parseInt(id)),
+          getBoardsByWorkspace(parseInt(id)),
+        ])
+        setWorkspace(workspaceData)
+        setBoards(boardsData)
       } catch (err: any) {
         setError(err.response?.data?.message || 'Không thể tải workspace')
       } finally {
@@ -24,7 +42,7 @@ export function WorkspaceDetail() {
       }
     }
 
-    fetchWorkspace()
+    fetchData()
   }, [id])
 
   if (loading) {
@@ -59,6 +77,17 @@ export function WorkspaceDetail() {
     return null
   }
 
+  const getVisibilityIcon = (visibility: string) => {
+    switch (visibility) {
+      case 'public':
+        return <Globe className="h-3 w-3" />
+      case 'private':
+        return <Lock className="h-3 w-3" />
+      default:
+        return <Users className="h-3 w-3" />
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -72,10 +101,28 @@ export function WorkspaceDetail() {
         <div>
           <h2 className="text-lg font-semibold mb-4">Boards</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* Placeholder for boards */}
-            <div className="bg-muted/50 rounded-lg p-4 h-24 flex items-center justify-center text-muted-foreground border-2 border-dashed cursor-pointer hover:bg-muted transition-colors">
-              + Tạo board mới
-            </div>
+            {/* Existing boards */}
+            {boards.map((board) => (
+              <div
+                key={board.idBoard}
+                className={`rounded-lg p-4 h-24 cursor-pointer hover:opacity-90 transition-all hover:scale-[1.02] relative group ${
+                  board.backgroundUrl || 'bg-gradient-to-r from-blue-500 to-blue-600'
+                }`}
+                onClick={() => navigate(`/board/${board.idBoard}`)}
+              >
+                <div className="text-white font-semibold drop-shadow-md">
+                  {board.boardName}
+                </div>
+                <div className="absolute bottom-2 right-2 text-white/80 flex items-center gap-1 text-xs">
+                  {getVisibilityIcon(board.visibility)}
+                </div>
+              </div>
+            ))}
+            {/* Create new board */}
+            <CreateBoard 
+              workspaceId={parseInt(id!)} 
+              onBoardCreated={fetchBoards}
+            />
           </div>
         </div>
       </div>
