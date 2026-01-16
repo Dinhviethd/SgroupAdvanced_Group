@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import { UserRepository, userRepository } from '@/repositories/user.repository';
 import { RegisterInput, LoginInput, ForgotPasswordInput, ResetPasswordInput, VerifyOTPInput } from '@/schemas/auth.schema';
 import { AuthResponseDTO, UserDTO } from '@/DTOs/auth.dto';
@@ -105,6 +106,78 @@ export class AuthService {
       throw new AppError(404, 'User không tồn tại');
     }
     return this.toUserDTO(user);
+  }
+
+  async logout(userId: number): Promise<void> {
+    // Có thể thêm logic để invalidate token ở đây
+  }
+
+  async loginWithGoogle(idToken: string): Promise<AuthResponseDTO> {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      throw new AppError(500, 'GOOGLE_CLIENT_ID is not configured');
+    }
+
+    const client = new OAuth2Client(clientId);
+    
+    try {
+      // Verify the token
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: clientId,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new AppError(401, 'Invalid Google token');
+      }
+
+      const { email, name, picture, sub: googleId } = payload;
+
+      if (!email) {
+        throw new AppError(401, 'Google account must have an email');
+      }
+
+      // Check if user exists, if not create one
+      let user = await this.userRepo.findByEmail(email);
+      
+      if (!user) {
+        // Create new user with Google account
+        user = await this.userRepo.create({
+          name: name || email.split('@')[0],
+          email,
+          password: await bcrypt.hash(googleId, await bcrypt.genSalt(10)),
+          avatarUrl: picture,
+          emailVerified: true, // Google email is already verified
+        });
+      } else if (!user.emailVerified) {
+        // Mark email as verified if user existed but email wasn't verified
+        await this.userRepo.update(user.idUser, {
+          emailVerified: true,
+          avatarUrl: picture || user.avatarUrl,
+        });
+        user = await this.userRepo.findById(user.idUser) as User;
+      }
+
+      // Generate tokens
+      const tokens = this.generateTokens(user.idUser);
+
+      return {
+        user: this.toUserDTO(user),
+        ...tokens,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('Token used too early')) {
+        throw new AppError(401, 'Invalid Google token: Token used too early');
+      }
+      if (error.message?.includes('Token used too late')) {
+        throw new AppError(401, 'Invalid Google token: Token expired');
+      }
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError(401, 'Failed to verify Google token');
+    }
   }
 
   async logout(userId: number): Promise<void> {

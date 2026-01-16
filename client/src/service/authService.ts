@@ -30,6 +30,10 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+export interface GoogleLoginRequest {
+  idToken: string;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -100,6 +104,17 @@ export const authService = {
 
   async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>('/auth/reset-password', data);
+    return response.data;
+  },
+
+  async loginWithGoogle(data: GoogleLoginRequest): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/login-google', data);
+    
+    if (response.data.success && response.data.data) {
+      const { user, accessToken } = response.data.data;
+      useAuth.getState().setAuth(user, accessToken);
+    }
+    
     return response.data;
   },
 };
