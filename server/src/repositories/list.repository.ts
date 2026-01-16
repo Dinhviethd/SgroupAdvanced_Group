@@ -56,25 +56,21 @@ export class ListRepository {
     return this.findById(idList);
   }
 
-  // Xóa mềm list
   async softDelete(idList: number): Promise<boolean> {
     const result = await this.repository.update(idList, { deleteAt: new Date() });
     return result.affected !== 0;
   }
 
-  // Archive list
   async archive(idList: number): Promise<boolean> {
     const result = await this.repository.update(idList, { archivedAt: new Date() });
     return result.affected !== 0;
   }
 
-  // Unarchive list
   async unarchive(idList: number): Promise<boolean> {
     const result = await this.repository.update(idList, { archivedAt: undefined });
     return result.affected !== 0;
   }
 
-  // Lấy board từ list
   async getBoardByListId(listId: number): Promise<Board | null> {
     const list = await this.findById(listId);
     return list?.board || null;

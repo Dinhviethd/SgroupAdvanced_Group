@@ -112,8 +112,6 @@ export class BoardRepository {
     });
     return count > 0;
   }
-
-  // Lấy role của user trong workspace
   async getUserWorkspaceRole(userId: number, workspaceId: number): Promise<Role | null> {
     const workspaceUser = await this.workspaceUserRepository.findOne({
       where: { idUser: userId, idWorkspace: workspaceId },
@@ -122,12 +120,10 @@ export class BoardRepository {
     return workspaceUser?.role || null;
   }
 
-  // Lấy role theo tên
   async findRoleByName(name: string): Promise<Role | null> {
     return this.roleRepository.findOne({ where: { name } });
   }
 
-  // Lấy role của user trong board
   async getUserBoardRole(userId: number, boardId: number): Promise<Role | null> {
     const boardUser = await this.boardUserRepository.findOne({
       where: { user: { idUser: userId }, board: { idBoard: boardId } },

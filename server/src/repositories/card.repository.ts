@@ -18,7 +18,6 @@ export class CardRepository {
     this.roleRepository = AppDataSource.getRepository(Role);
   }
 
-  // Lấy card theo ID
   async findById(idCard: number): Promise<Card | null> {
     return this.repository.findOne({
       where: { idCard },
@@ -26,7 +25,6 @@ export class CardRepository {
     });
   }
 
-  // Lấy tất cả cards trong list
   async findByListId(listId: number): Promise<Card[]> {
     return this.repository.find({
       where: { 
@@ -38,7 +36,6 @@ export class CardRepository {
     });
   }
 
-  // Lấy tất cả cards trong board
   async findByBoardId(boardId: number): Promise<Card[]> {
     return this.repository.find({
       where: { 
@@ -50,7 +47,6 @@ export class CardRepository {
     });
   }
 
-  // Lấy position tiếp theo trong list
   async getNextPosition(listId: number): Promise<number> {
     const result = await this.repository
       .createQueryBuilder('card')
@@ -62,37 +58,31 @@ export class CardRepository {
     return (result?.maxPosition ?? -1) + 1;
   }
 
-  // Tạo card mới
   async create(cardData: Partial<Card>): Promise<Card> {
     const card = this.repository.create(cardData);
     return this.repository.save(card);
   }
 
-  // Cập nhật card
   async update(idCard: number, updateData: Partial<Card>): Promise<Card | null> {
     await this.repository.update(idCard, updateData);
     return this.findById(idCard);
   }
 
-  // Xóa card
   async delete(idCard: number): Promise<boolean> {
     const result = await this.repository.delete(idCard);
     return result.affected !== 0;
   }
 
-  // Archive card
   async archive(idCard: number): Promise<boolean> {
     const result = await this.repository.update(idCard, { isArchived: true });
     return result.affected !== 0;
   }
 
-  // Unarchive card
   async unarchive(idCard: number): Promise<boolean> {
     const result = await this.repository.update(idCard, { isArchived: false });
     return result.affected !== 0;
   }
 
-  // Lấy list theo ID
   async getListById(listId: number): Promise<List | null> {
     return this.listRepository.findOne({
       where: { idList: listId },
@@ -100,7 +90,6 @@ export class CardRepository {
     });
   }
 
-  // Kiểm tra user có trong board không
   async isUserInBoard(userId: number, boardId: number): Promise<boolean> {
     const count = await this.boardUserRepository.count({
       where: { user: { idUser: userId }, board: { idBoard: boardId } },
@@ -108,7 +97,6 @@ export class CardRepository {
     return count > 0;
   }
 
-  // Lấy role của user trong board
   async getUserBoardRole(userId: number, boardId: number): Promise<Role | null> {
     const boardUser = await this.boardUserRepository.findOne({
       where: { user: { idUser: userId }, board: { idBoard: boardId } },
@@ -117,14 +105,12 @@ export class CardRepository {
     return boardUser?.role || null;
   }
 
-  // Kiểm tra user có permission không
   async userHasPermission(userId: number, boardId: number, permissionCode: string): Promise<boolean> {
     const role = await this.getUserBoardRole(userId, boardId);
     if (!role || !role.permissions) return false;
     return role.permissions.some(p => p.code === permissionCode);
   }
 
-  // Di chuyển card sang list khác
   async moveCard(cardId: number, newListId: number, newPosition: number): Promise<Card | null> {
     await this.repository.update(cardId, {
       list: { idList: newListId } as any,
@@ -132,8 +118,6 @@ export class CardRepository {
     });
     return this.findById(cardId);
   }
-
-  // Cập nhật positions của các cards
   async updatePositions(listId: number, cards: { idCard: number; position: number }[]): Promise<void> {
     for (const card of cards) {
       await this.repository.update(card.idCard, { position: card.position });

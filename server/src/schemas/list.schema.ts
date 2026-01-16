@@ -1,6 +1,4 @@
 import { z } from 'zod';
-
-// Schema tạo list
 export const createListSchema = z.object({
   listName: z
     .string()
@@ -10,7 +8,6 @@ export const createListSchema = z.object({
   position: z.number().min(0).optional(),
 });
 
-// Schema cập nhật list
 export const updateListSchema = z.object({
   listName: z
     .string()
