@@ -9,6 +9,7 @@ import {MainPage} from '@/components/MainPage'
 import { ProtectedRoute, PublicRoute } from '@/components/auth/ProtectedRoute'
 import { CreateWorkspace } from '@/components/workspace/CreateWorkspace'
 import { WorkspaceDetail } from '@/components/workspace/WorkspaceDetail'
+import { EditWorkspace } from '@/components/workspace/EditWorkspace'
 
 const routes = [
   {
@@ -25,6 +26,7 @@ const routes = [
               { path: "", Component: MainPage },
               { path: "workspace/create", Component: CreateWorkspace },
               { path: "workspace/:id", Component: WorkspaceDetail },
+              { path: "workspace/:id/edit", Component: EditWorkspace },
             ],
           },
         ],

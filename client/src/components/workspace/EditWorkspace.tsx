@@ -1,18 +1,22 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { createWorkspace } from '@/service/workspaceService'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getWorkspaceById, updateWorkspace } from '@/service/workspaceService'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 
 const TIERS = ['FREE', 'PRO', 'BUSINESS']
 const STATUSES = ['PUBLIC', 'PRIVATE']
 
-export function CreateWorkspace() {
+export function EditWorkspace() {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     tier: 'FREE',
@@ -20,33 +24,86 @@ export function CreateWorkspace() {
     avatarUrl: '',
   })
 
+  useEffect(() => {
+    if (!id) return
+    fetchWorkspace()
+  }, [id])
+
+  const fetchWorkspace = async () => {
+    try {
+      setLoading(true)
+      const workspace = await getWorkspaceById(parseInt(id!))
+      setFormData({
+        name: workspace.name,
+        tier: workspace.tier || 'FREE',
+        status: workspace.status || 'PRIVATE',
+        avatarUrl: workspace.avatarUrl || '',
+      })
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Không thể tải workspace')
+      toast.error('Lỗi khi tải workspace')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name.trim()) {
       toast.error('Vui lòng nhập tên workspace')
       return
     }
 
-    setLoading(true)
+    setSaving(true)
     try {
-      const workspace = await createWorkspace(formData)
-      toast.success('Tạo workspace thành công!')
-      navigate(`/workspace/${workspace.idWorkspace}`)
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Không thể tạo workspace')
+      await updateWorkspace(parseInt(id!), formData)
+      toast.success('Cập nhật workspace thành công!')
+      navigate(`/workspace/${id}`)
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể cập nhật workspace')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => navigate('/')} variant="outline">
+          Quay về trang chủ
+        </Button>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-4 w-full" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Tạo Workspace mới</CardTitle>
+          <CardTitle>Chỉnh sửa Workspace</CardTitle>
           <CardDescription>
-            Workspace là nơi chứa các board và thành viên của bạn
+            Cập nhật thông tin workspace của bạn
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -55,10 +112,10 @@ export function CreateWorkspace() {
               <Label htmlFor="name">Tên Workspace</Label>
               <Input
                 id="name"
-                placeholder="VD: Công ty ABC, Dự án XYZ..."
+                placeholder="Nhập tên workspace..."
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={loading}
+                disabled={saving}
               />
             </div>
 
@@ -68,7 +125,7 @@ export function CreateWorkspace() {
                 id="tier"
                 value={formData.tier}
                 onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
-                disabled={loading}
+                disabled={saving}
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {TIERS.map((tier) => (
@@ -85,7 +142,7 @@ export function CreateWorkspace() {
                 id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                disabled={loading}
+                disabled={saving}
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {STATUSES.map((status) => (
@@ -97,28 +154,28 @@ export function CreateWorkspace() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="avatarUrl">URL hình ảnh (tùy chọn)</Label>
+              <Label htmlFor="avatarUrl">URL hình ảnh</Label>
               <Input
                 id="avatarUrl"
                 placeholder="https://..."
                 value={formData.avatarUrl}
                 onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                disabled={loading}
+                disabled={saving}
               />
             </div>
-            
+
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => navigate(-1)}
-                disabled={loading}
+                onClick={() => navigate(`/workspace/${id}`)}
+                disabled={saving}
               >
                 Hủy
               </Button>
-              <Button type="submit" className="flex-1" disabled={loading}>
-                {loading ? 'Đang tạo...' : 'Tạo Workspace'}
+              <Button type="submit" className="flex-1" disabled={saving}>
+                {saving ? 'Đang cập nhật...' : 'Cập nhật'}
               </Button>
             </div>
           </form>
