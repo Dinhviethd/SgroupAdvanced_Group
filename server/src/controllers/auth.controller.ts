@@ -182,6 +182,28 @@ class AuthController {
     res.status(200).json(response);
   });
 
+  // Đăng nhập bằng Google
+  loginWithGoogle = asyncHandler(async (req: Request, res: Response) => {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      throw new AppError(400, 'Google ID token is required');
+    }
+
+    const result = await authService.loginWithGoogle(idToken);
+
+    // Set refresh token vào cookie
+    this.setRefreshTokenCookie(res, result.refreshToken);
+
+    const response: ApiResponseDTO<AuthResponseDTO> = {
+      success: true,
+      message: 'Đăng nhập bằng Google thành công',
+      data: result,
+    };
+
+    res.status(200).json(response);
+  });
+
   // Helper method để set refresh token cookie
   private setRefreshTokenCookie(res: Response, refreshToken: string): void {
     const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
