@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getWorkspaceById, updateWorkspace, type Workspace } from '@/service/workspaceService'
 import { Button } from '@/components/ui/button'
@@ -12,13 +12,24 @@ export function WorkspaceDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const fetchBoards = useCallback(async () => {
+    if (!id) return
+    try {
+      const boardsData = await getBoardsByWorkspace(parseInt(id))
+      setBoards(boardsData)
+    } catch (err) {
+      console.error('Error fetching boards:', err)
+    }
+  }, [id])
+
   useEffect(() => {
-    const fetchWorkspace = async () => {
+    const fetchData = async () => {
       if (!id) return
-      
+
       try {
         setLoading(true)
         const data = await getWorkspaceById(parseInt(id))
@@ -30,7 +41,7 @@ export function WorkspaceDetail() {
       }
     }
 
-    fetchWorkspace()
+    fetchData()
   }, [id])
 
   if (loading) {
@@ -63,6 +74,17 @@ export function WorkspaceDetail() {
 
   if (!workspace) {
     return null
+  }
+
+  const getVisibilityIcon = (visibility: string) => {
+    switch (visibility) {
+      case 'public':
+        return <Globe className="h-3 w-3" />
+      case 'private':
+        return <Lock className="h-3 w-3" />
+      default:
+        return <Users className="h-3 w-3" />
+    }
   }
 
   return (
