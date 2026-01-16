@@ -10,6 +10,9 @@ import { ProtectedRoute, PublicRoute } from '@/components/auth/ProtectedRoute'
 import { CreateWorkspace } from '@/components/workspace/CreateWorkspace'
 import { WorkspaceDetail } from '@/components/workspace/WorkspaceDetail'
 import { EditWorkspace } from '@/components/workspace/EditWorkspace'
+import { ProfileView } from '@/components/profile/ProfileView'
+import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm'
+import { DeleteAccountForm } from '@/components/profile/DeleteAccountForm'
 
 const routes = [
   {
@@ -27,6 +30,9 @@ const routes = [
               { path: "workspace/create", Component: CreateWorkspace },
               { path: "workspace/:id", Component: WorkspaceDetail },
               { path: "workspace/:id/edit", Component: EditWorkspace },
+              { path: "profile", Component: ProfileView },
+              { path: "profile/change-password", Component: ChangePasswordForm },
+              { path: "profile/delete-account", Component: DeleteAccountForm },
             ],
           },
         ],

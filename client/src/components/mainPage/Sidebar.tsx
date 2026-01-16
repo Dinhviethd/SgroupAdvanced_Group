@@ -121,7 +121,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <div className="flex items-center gap-2 px-2 py-1.5">
+              <Link to="/profile" className="flex items-center gap-2 px-2 py-1.5">
                 <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
                   {user?.name?.charAt(0).toUpperCase() || "U"}
                 </div>
@@ -129,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="truncate text-sm font-medium">{user?.name || "User"}</span>
                   <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
                 </div>
-              </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
