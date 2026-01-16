@@ -5,6 +5,7 @@ import { authMiddleware } from '@/middlewares/auth.middleware';
 const router = Router();
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/login-google', authController.loginWithGoogle);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/verify-otp', authController.verifyOTP);
