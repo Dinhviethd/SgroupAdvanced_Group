@@ -74,9 +74,18 @@ export const resetPasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+export const updateProfileSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'Tên phải có ít nhất 2 ký tự')
+    .max(100, 'Tên không được vượt quá 100 ký tự'),
+  phone: z.string().optional(),
+})
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type VerifyOTPInput = z.infer<typeof verifyOTPSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

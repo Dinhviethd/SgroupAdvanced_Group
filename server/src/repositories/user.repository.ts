@@ -29,6 +29,10 @@ export class UserRepository {
     return this.repository.save(user);
   }
 
+  async save(user: User): Promise<User> {
+    return this.repository.save(user)
+  }
+
   // Cập nhật user
   async update(idUser: number, updateData: Partial<User>): Promise<User | null> {
     await this.repository.update(idUser, updateData);

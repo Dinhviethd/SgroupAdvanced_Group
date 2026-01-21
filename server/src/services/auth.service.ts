@@ -2,10 +2,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserRepository, userRepository } from '@/repositories/user.repository';
 import { RegisterInput, LoginInput, ForgotPasswordInput, ResetPasswordInput, VerifyOTPInput } from '@/schemas/auth.schema';
-import { AuthResponseDTO, UserDTO } from '@/DTOs/auth.dto';
+import { AuthResponseDTO, UpDatedProfileDTO, UserDTO } from '@/DTOs/auth.dto';
 import { AppError } from '@/utils/error.response';
 import { User } from '@/models/user.model';
 import { generateOTP, sendOTPEmail } from '@/utils/email';
+import { uploadFileToCloudinary } from '@/utils/upload';
+import { da, fi } from 'zod/v4/locales/index.cjs';
 
 
 export class AuthService {
@@ -236,6 +238,25 @@ export class AuthService {
       phone: user.phone,
       createdAt: user.createdAt,
     };
+  }
+
+  async updateProfile(idUser: number, data: UpDatedProfileDTO, file?: Express.Multer.File): Promise<UserDTO> {
+    const user = await this.userRepo.findById(idUser)
+    if(!user) {
+      throw new Error('User not Found')
+    }
+
+    if (file) {
+      const result = await uploadFileToCloudinary(file.path, 'user_avatars', user.idUser.toString());
+      user.avatarUrl = result.secure_url;
+    }
+
+    if (data.name) user.name = data.name
+
+    if(data.phone) user.phone = data.phone
+
+    await this.userRepo.save(user)
+    return this.toUserDTO(user)
   }
 }
 

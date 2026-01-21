@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authController } from '@/controllers/auth.controller';
 import { authMiddleware } from '@/middlewares/auth.middleware';
+import { upload } from '@/middlewares/upload.middleware';
 
 const router = Router();
 router.post('/register', authController.register);
@@ -10,6 +11,7 @@ router.post('/forgot-password', authController.forgotPassword);
 router.post('/verify-otp', authController.verifyOTP);
 router.post('/reset-password', authController.resetPassword);
 router.get('/me', authMiddleware, authController.getCurrentUser);
+router.put('/me', authMiddleware, upload.single('avatar'), authController.updateProfile)
 router.post('/logout', authMiddleware, authController.logout);
 
 export default router;

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { authService } from '@/services/auth.service';
-import { registerSchema, loginSchema, refreshTokenSchema, forgotPasswordSchema, verifyOTPSchema, resetPasswordSchema } from '@/schemas/auth.schema';
+import { registerSchema, loginSchema, refreshTokenSchema, forgotPasswordSchema, verifyOTPSchema, resetPasswordSchema, updateProfileSchema } from '@/schemas/auth.schema';
 import { asyncHandler, AppError } from '@/utils/error.response';
-import { ApiResponseDTO, AuthResponseDTO, UserDTO } from '@/DTOs/auth.dto';
+import { ApiResponseDTO, AuthResponseDTO, UpDatedProfileDTO, UserDTO } from '@/DTOs/auth.dto';
 
 class AuthController {
   // Đăng ký tài khoản mới
@@ -173,14 +173,41 @@ class AuthController {
     }
 
     await authService.resetPassword(validationResult.data);
-
+    
     const response: ApiResponseDTO<null> = {
       success: true,
       message: 'Đặt lại mật khẩu thành công',
     };
-
+    
     res.status(200).json(response);
   });
+  
+  updateProfile = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId
+    if(!userId) {
+      throw new AppError(401, 'Unauthorized')
+    }
+    const validationResult = updateProfileSchema.safeParse(req.body);
+    
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.issues
+        .map((err: any) => err.message)
+        .join(', ');
+      throw new AppError(400, errorMessage);
+    }
+
+    const file = req.file
+
+    const updatedUser = await authService.updateProfile(userId, validationResult.data, file)
+
+    const response: ApiResponseDTO<UpDatedProfileDTO> = {
+      success: true,
+      message: 'Update Success',
+      data: updatedUser
+    }
+
+    res.status(200).json(response);
+  })
 
   // Helper method để set refresh token cookie
   private setRefreshTokenCookie(res: Response, refreshToken: string): void {

@@ -37,3 +37,8 @@ export interface ApiResponseDTO<T> {
   message: string;
   data?: T;
 }
+
+export interface UpDatedProfileDTO {
+  name: string;
+  phone?: string
+}

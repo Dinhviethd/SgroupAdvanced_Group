@@ -16,7 +16,7 @@ const getResourceType = (fileName: string): string => {
   return 'auto';
 };
 
-export const uploadToCloudinary = async (filePath: string, folder: string) => {
+export const uploadToCloudinary = async (filePath: string, folder: string, fileName: string) => {
   const result = await cloudinary.uploader.upload(filePath, {
     folder: `chatmate_uploads/${folder}`,
     resource_type: "image" as const,
