@@ -30,6 +30,13 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  name: string;
+  phone?: string;
+  avatar?: File
+}
+
+// -------------------------------------------------------------
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -45,6 +52,8 @@ export interface ApiResponse<T = null> {
   message: string;
   data?: T;
 }
+
+
 
 export const authService = {
   async register(data: RegisterRequest): Promise<AuthResponse> {
@@ -102,6 +111,23 @@ export const authService = {
     const response = await api.post<ApiResponse>('/auth/reset-password', data);
     return response.data;
   },
+
+  async updateProfile(data: UpdateProfileRequest): Promise<ApiResponse> {
+    const formData = new FormData();
+    if (data.name) formData.append('name', data.name);
+    if (data.phone) formData.append('phone', data.phone);
+    if (data.avatar) formData.append('avatar', data.avatar);
+    
+    const response = await api.put<ApiResponse>('/auth/me', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    })
+    if(response.data.success && response.data.data) {
+      useAuth.getState().setUser(response.data.data)
+    }
+    return response.data
+  }
 };
 
 export default authService;

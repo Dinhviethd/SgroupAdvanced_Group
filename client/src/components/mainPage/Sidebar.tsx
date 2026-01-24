@@ -1,6 +1,12 @@
-import * as React from "react"
-import { GalleryVerticalEnd, Folder, LayoutDashboard, Plus, LogOut } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
+import * as React from "react";
+import {
+  GalleryVerticalEnd,
+  Folder,
+  LayoutDashboard,
+  Plus,
+  LogOut,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -12,35 +18,37 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { getMyWorkspaces, type Workspace } from "@/service/workspaceService"
-import { useAuth } from "@/store/authStore"
+} from "@/components/ui/sidebar";
+import { getMyWorkspaces, type Workspace } from "@/service/workspaceService";
+import { useAuth } from "@/store/authStore";
+import { ViewSettingProfile } from "../Profile/view-setting-profile";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([])
-  const [loading, setLoading] = React.useState(true)
-  const navigate = useNavigate()
-  const { user, clearAuth } = useAuth()
+  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const navigate = useNavigate();
+  const { user, clearAuth } = useAuth();
 
   const handleLogout = () => {
-    clearAuth()
-    navigate("/login")
-  }
+    clearAuth();
+    navigate("/login");
+  };
 
   React.useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const data = await getMyWorkspaces()
-        setWorkspaces(data)
+        const data = await getMyWorkspaces();
+        setWorkspaces(data);
       } catch (error) {
-        console.error("Failed to fetch workspaces:", error)
+        console.error("Failed to fetch workspaces:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchWorkspaces()
-  }, [])
+    fetchWorkspaces();
+  }, []);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -90,7 +98,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ) : workspaces.length === 0 ? (
               <SidebarMenuItem>
                 <SidebarMenuButton disabled>
-                  <span className="text-muted-foreground">Chưa có workspace</span>
+                  <span className="text-muted-foreground">
+                    Chưa có workspace
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ) : (
@@ -108,7 +118,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {/* Nút tạo workspace mới */}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link to="/workspace/create" className="text-muted-foreground hover:text-foreground">
+                <Link
+                  to="/workspace/create"
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <Plus className="size-4" />
                   <span>Tạo workspace mới</span>
                 </Link>
@@ -117,21 +130,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      {/* Profile */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <div className="flex items-center gap-2 px-2 py-1.5">
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                  {user?.name?.charAt(0).toUpperCase() || "U"}
-                </div>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="truncate text-sm font-medium">{user?.name || "User"}</span>
-                  <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
-                </div>
-              </div>
-            </SidebarMenuButton>
+            <ViewSettingProfile>
+                <SidebarMenuButton className="h-12">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">{user?.name}</span>
+                    <span className="truncate text-xs">{user?.email}</span>
+                  </div>
+                </SidebarMenuButton>
+            </ViewSettingProfile>
           </SidebarMenuItem>
+          
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
@@ -145,5 +162,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
